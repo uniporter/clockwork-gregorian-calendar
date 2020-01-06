@@ -1,21 +1,17 @@
 import 'package:clockwork/clockwork.dart';
 
-enum Era {
-    AD, BC
-}
+/// Era as defined in the Gregorian Calendar. There is a total of 2 eras, [BC] and [AD], which correspond to years
+/// `[-∞, 0]` and `[1, ∞]`, respectively.
+class GregorianEra extends Era {
+    GregorianEra(int value): super(value, const Range(0, 1, false));
 
-extension EraExtension on Era {
-    /// Returns the locale-sensitive name of the era.
-    String toName([Locale? locale])  => this == Era.AD ? nonNullLocale(locale).gregorianCalendar.eras.name.pre : nonNullLocale(locale).gregorianCalendar.eras.name.post;
-    /// Returns the locale-sensitive abbreviation of the era.
-    String toAbbr([Locale? locale])  => this == Era.AD ? nonNullLocale(locale).gregorianCalendar.eras.abbr.pre : nonNullLocale(locale).gregorianCalendar.eras.abbr.post;
-    /// Returns the locale-sensitive narrow name of the era.
-    String toNarrow([Locale? locale]) => this == Era.AD ? nonNullLocale(locale).gregorianCalendar.eras.narrow.pre : nonNullLocale(locale).gregorianCalendar.eras.narrow.post;
+    static final AD = GregorianEra(1);
+    static final BC = GregorianEra(0);
 
-    /// Returns the alternative locale-sensitive name of the era.
-    String toNameAlt([Locale? locale])  => this == Era.AD ? nonNullLocale(locale).gregorianCalendar.eras.name.preAlt : nonNullLocale(locale).gregorianCalendar.eras.name.postAlt;
-    /// Returns the alternative locale-sensitive abbreviation of the era.
-    String toAbbrAlt([Locale? locale])  => this == Era.AD ? nonNullLocale(locale).gregorianCalendar.eras.abbr.preAlt : nonNullLocale(locale).gregorianCalendar.eras.abbr.postAlt;
-    /// Returns the alternative locale-sensitive narrow name of the era.
-    String toNarrowAlt([Locale? locale]) => this == Era.AD ? nonNullLocale(locale).gregorianCalendar.eras.narrow.preAlt : nonNullLocale(locale).gregorianCalendar.eras.narrow.postAlt;
+    @override String toName([Locale? locale]) => this == AD ? nonNullLocale(locale).gregorianCalendar.eras.name.pre : nonNullLocale(locale).gregorianCalendar.eras.name.post;
+    @override String toAbbr([Locale? locale]) => this == AD ? nonNullLocale(locale).gregorianCalendar.eras.abbr.pre : nonNullLocale(locale).gregorianCalendar.eras.abbr.post;
+    @override String toNarrow([Locale? locale]) => this == AD ? nonNullLocale(locale).gregorianCalendar.eras.narrow.pre : nonNullLocale(locale).gregorianCalendar.eras.narrow.post;
+    @override String toNameAlt([Locale? locale]) => this == AD ? nonNullLocale(locale).gregorianCalendar.eras.name.preAlt : nonNullLocale(locale).gregorianCalendar.eras.name.postAlt;
+    @override String toAbbrAlt([Locale? locale]) => this == AD ? nonNullLocale(locale).gregorianCalendar.eras.abbr.preAlt : nonNullLocale(locale).gregorianCalendar.eras.abbr.postAlt;
+    @override String toNarrowAlt([Locale? locale]) => this == AD ? nonNullLocale(locale).gregorianCalendar.eras.narrow.preAlt : nonNullLocale(locale).gregorianCalendar.eras.narrow.postAlt;
 }

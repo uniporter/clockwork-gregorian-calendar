@@ -1,4 +1,6 @@
 name: clockwork_gregorian_calendar
+description: Gregorian calendar support for the clockwork library.
+
 version: 0.0.1
 
 environment:

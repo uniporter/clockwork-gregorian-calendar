@@ -1,28 +1,19 @@
 import 'package:clockwork/clockwork.dart';
 
-enum Quarter {
-    skip,
-    Spring,
-    Summer,
-    Fall,
-    Winter,
-}
+class GregorianQuarter extends Quarter {
+    GregorianQuarter(int value): super(value, const Range(1, 4, false));
 
-extension QuarterExtension on Quarter {
-    /// Returns the locale-sensitive abbreviated name of the month.
-    String toAbbr([Locale? locale]) => nonNullLocale(locale).gregorianCalendar.quarters.format.abbreviated[this.index - 1];
-    /// Returns the locale-sensitive narrow name of the month.
-    String toNarrow([Locale? locale]) => nonNullLocale(locale).gregorianCalendar.quarters.format.narrow[this.index - 1];
-    /// Returns the locale-sensitive abbreviated name of the month.
-    String toWide([Locale? locale]) => nonNullLocale(locale).gregorianCalendar.quarters.format.wide[this.index - 1];
-    /// Returns the locale-sensitive abbreviated name of the month. If the locale doesn't contain this info, returns [null].
-    String? toShort([Locale? locale]) => nonNullLocale(locale).gregorianCalendar.quarters.format.short?.elementAt(this.index - 1);
-    /// Returns the standalone, locale-sensitive abbreviated name of the month.
-    String toAbbrStandalone([Locale? locale]) => nonNullLocale(locale).gregorianCalendar.quarters.standalone.abbreviated[this.index - 1];
-    /// Returns the standalone, locale-sensitive narrow name of the month.
-    String toNarrowStandalone([Locale? locale]) => nonNullLocale(locale).gregorianCalendar.quarters.standalone.narrow[this.index - 1];
-    /// Returns the standalone, locale-sensitive abbreviated name of the month.
-    String toWideStandalone([Locale? locale]) => nonNullLocale(locale).gregorianCalendar.quarters.standalone.wide[this.index - 1];
-    /// Returns the standalone, locale-sensitive abbreviated name of the month. If the locale doesn't contain this info, returns [null].
-    String? toShortStandalone([Locale? locale]) => nonNullLocale(locale).gregorianCalendar.quarters.standalone.short?.elementAt(this.index - 1);
+    static final Spring = GregorianQuarter(1);
+    static final Summer = GregorianQuarter(2);
+    static final Fall = GregorianQuarter(3);
+    static final Winter = GregorianQuarter(4);
+
+    @override String toAbbr([Locale? locale]) => nonNullLocale(locale).gregorianCalendar.quarters.format.abbreviated[this() - 1];
+    @override String toNarrow([Locale? locale]) => nonNullLocale(locale).gregorianCalendar.quarters.format.narrow[this() - 1];
+    @override String toWide([Locale? locale]) => nonNullLocale(locale).gregorianCalendar.quarters.format.wide[this() - 1];
+    @override String? toShort([Locale? locale]) => nonNullLocale(locale).gregorianCalendar.quarters.format.short?.elementAt(this() - 1);
+    @override String toAbbrStandalone([Locale? locale]) => nonNullLocale(locale).gregorianCalendar.quarters.standalone.abbreviated[this() - 1];
+    @override String toNarrowStandalone([Locale? locale]) => nonNullLocale(locale).gregorianCalendar.quarters.standalone.narrow[this() - 1];
+    @override String toWideStandalone([Locale? locale]) => nonNullLocale(locale).gregorianCalendar.quarters.standalone.wide[this() - 1];
+    @override String? toShortStandalone([Locale? locale]) => nonNullLocale(locale).gregorianCalendar.quarters.standalone.short?.elementAt(this() - 1);
 }
