@@ -4,7 +4,6 @@ export 'src/calendar.dart';
 export 'src/timestamp_extension.dart';
 
 export 'src/units/era.dart';
-export 'src/units/gregorian_calendar.dart';
 export 'src/units/length.dart';
 export 'src/units/month.dart';
 export 'src/units/quarter.dart';

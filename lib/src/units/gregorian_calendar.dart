@@ -1,2 +1,0 @@
-library gregorian_calendar;
-
