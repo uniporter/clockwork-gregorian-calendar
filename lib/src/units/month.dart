@@ -1,5 +1,6 @@
 import 'package:clockwork/clockwork.dart';
 import 'package:clockwork_gregorian_calendar/src/units/year.dart';
+import 'package:clockwork_gregorian_calendar/src/utils.dart';
 
 class GregorianMonth extends Month {
     static final daysInMonthMap = <GregorianMonth, int?>{
@@ -33,6 +34,23 @@ class GregorianMonth extends Month {
     static final November = GregorianMonth(11);
     static final December = GregorianMonth(12);
 
+    static int weeksPer(GregorianMonth month, GregorianYear year, [Locale? locale, GregorianWeekday? firstDayOfMonth]) {
+        if (firstDayOfMonth == null) {
+            final zeroBasedWeekdayFirstDayOfMonth = (daysSinceEpoch(year, month, GregorianDay(1, month, year)) - 2) % 7;
+            firstDayOfMonth = zeroBasedWeekdayFirstDayOfMonth == 0 ? GregorianWeekday.Saturday : GregorianWeekday(zeroBasedWeekdayFirstDayOfMonth);
+        }
+
+        final partialWeekLength = (nonNullLocale(locale).weekData.firstDayOfWeek - firstDayOfMonth()) % 7;
+        final isFirstDayCounted = partialWeekLength == 0 || partialWeekLength >= nonNullLocale(locale).weekData.minDaysInWeek;
+
+        /// The first day of *next month*.
+        final firstDayOfNextMonth = (firstDayOfMonth() + daysPer(month, year)) % 7 != 0 ? GregorianWeekday((firstDayOfMonth() + daysPer(month, year)) % 7) : GregorianWeekday.Saturday;
+        final nextPartialWeekLength = (nonNullLocale(locale).weekData.firstDayOfWeek - firstDayOfNextMonth()) % 7;
+        final isLastWeekOfMonthCounted = nextPartialWeekLength != 0 && nextPartialWeekLength < nonNullLocale(locale).weekData.minDaysInWeek;
+
+        final daysInMonth = daysPer(month, year);
+        return (daysInMonth / 7).ceil() + (isFirstDayCounted ? 1 : 0) + (isLastWeekOfMonthCounted ? 0 : -1);
+    }
     static int daysPer(GregorianMonth month, GregorianYear year) => daysInMonthMap[month] ?? GregorianYear.isLeapYear(year) ? 29 : 28;
     static int hoursPer(GregorianMonth month, GregorianYear year) => daysPer(month, year) * Day.hoursPer;
     static int minutesPer(GregorianMonth month, GregorianYear year) => daysPer(month, year) * Day.minutesPer;

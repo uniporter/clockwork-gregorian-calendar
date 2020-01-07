@@ -1,5 +1,6 @@
 import 'package:clockwork/clockwork.dart';
 import 'package:clockwork_gregorian_calendar/src/units/day.dart';
+import 'package:clockwork_gregorian_calendar/src/units/week.dart';
 import 'package:clockwork_gregorian_calendar/src/units/year.dart';
 import 'package:clockwork_gregorian_calendar/src/units/year_of_era.dart';
 
@@ -31,23 +32,65 @@ extension GregorianCalendarExtension on Timestamp {
     GregorianMonth get month => _components.month;
     /// Returns the day.
     GregorianDay get day => _components.day;
+    /// Returns the day of year.
+    GregorianDayOfYear get dayOfYear => GregorianDayOfYear(IterableRange<GregorianMonth>(GregorianMonth.January, month, (month) => month++).fold<int>(0, (prev, curr) => prev + GregorianMonth.daysPer(curr, year)) + day(), year);
 
     /// Returns the weekday.
-    GregorianWeekday get weekday => GregorianWeekday(daysSinceEpoch(year, month, day + 4) % 7 + 1);
+    GregorianWeekday weekday([Locale? locale]) {
+        final sundayBasedWeekday = daysSinceEpoch(year, month, day + 4) % 7 + 1;
+        final candidate = (sundayBasedWeekday + (nonNullLocale(locale).weekData.firstDayOfWeek - 1)) % 7;
+        return candidate == 0 ? GregorianWeekday.Saturday : GregorianWeekday(candidate);
+    }
 
     /// Returns the quarter.
     GregorianQuarter get quarter => GregorianQuarter((month() - 1) ~/ 3 + 1);
 
     /// Returns the fixed day period (AM/PM).
     FixedDayPeriod get fixedDayPeriod => hour < 12 ? FixedDayPeriod.AM : FixedDayPeriod.PM;
-    /// Returns the day period. This is a locale-dependent getter. Currently the locale defaults to [currLocale], but we expect this to change.
-    DayPeriod get dayPeriod {
+    /// Returns the day period. If the locale doesn't support flexible day period, we return null.
+    DayPeriod? dayPeriod([Locale? locale]) {
         final minutesSinceMidnight = hour() * Hour.minutesPer + minute();
-        return currLocale.dayPeriodsRule.keys.firstWhere((dayPeriod) => currLocale.dayPeriodsRule[dayPeriod].contains(minutesSinceMidnight));
+        try {
+            return nonNullLocale(locale).dayPeriodsRule.keys.firstWhere((dayPeriod) => currLocale.dayPeriodsRule[dayPeriod].contains(minutesSinceMidnight));
+        } catch (_) {
+            return null;
+        }
     }
 
     /// Returns the week year.
-    GregorianYear get weekyear => GregorianYear(0);    // TODO: implement
+    GregorianYear weekYear([Locale? locale]) {
+        return (weekOfYear == 52 || weekOfYear == 53) && month == GregorianMonth.January ? year - 1
+            : weekOfYear == 1 && month == GregorianMonth.December ? year + 1
+            : year;
+    }
+
+    /// Returns the week of year.
+    ///
+    /// The calculation depends on the particular [locale] chosen, which has a [minDaysInWeek] and a [startOfWeek] element. A proper week in the locale
+    /// starts on [startOfWeek].
+    GregorianWeekOfYear weekOfYear([Locale? locale]) {
+        /// The weekday of the first day of the year.
+        final weekdayFirstDayOfYear = GregorianWeekday((weekday()() - dayOfYear() + 1) % 7);
+        /// How long is the incomplete week at the beginning of the year.
+        final partialWeekLength = (weekdayFirstDayOfYear - nonNullLocale(locale).weekData.firstDayOfWeek)() % 7;
+        /// Whether we should count the partial week as the first week of the year.
+        final partialWeekCounted = partialWeekLength == 0 || partialWeekLength >= nonNullLocale(locale).weekData.minDaysInWeek;
+        /// Candidate for the result, with the caveat that for days in the partial week at the beginning of the year, the variable yields 0.
+        /// We adjust for it in the return statement.
+        final weekOfYearCandidate = ((dayOfYear() - partialWeekLength) / 7).ceil() + (partialWeekCounted ? 1 : 0);
+        return GregorianWeekOfYear(weekOfYearCandidate == 0 ? GregorianYear.weeksPer(year - 1) : weekOfYearCandidate, year);
+    }
+
+    /// Returns the week of month.
+    GregorianWeekOfMonth weekOfMonth([Locale? locale]) {
+        final weekdayFirstDayOfMonth = GregorianWeekday((weekday()() - dayOfYear() + 1) % 7);
+        final partialWeekLength = (weekdayFirstDayOfMonth - nonNullLocale(locale).weekData.firstDayOfWeek)() % 7;
+        final partialWeekCounted = partialWeekLength == 0 || partialWeekLength >= nonNullLocale(locale).weekData.minDaysInWeek;
+        final weekOfMonthCandidate = ((day() - partialWeekLength) / 7).ceil() + (partialWeekCounted ? 1 : 0);
+        final prevMonth = month == GregorianMonth.January ? GregorianMonth.December : month - 1;
+        final yearOfPrevMonth = month == GregorianMonth.January ? year - 1 : year;
+        return GregorianWeekOfMonth(weekOfMonthCandidate == 0 ? GregorianMonth.weeksPer(prevMonth, yearOfPrevMonth) : weekOfMonthCandidate, month, year);
+    }
 
     /// Return a [Timestamp] at the start of [unit].
     Timestamp startOf(Length unit) {
@@ -78,9 +121,6 @@ extension GregorianCalendarExtension on Timestamp {
             unit >= Length.MICROSECOND ? Microsecond(0) : microsecond,
         );
     }
-
-    /// Returns the number of days since the beginning of the year.
-    int get dayOfYear => IterableRange<GregorianMonth>(GregorianMonth.January, month, (i) => i = i + 1).fold(0, (counter, month) => counter += GregorianMonth.daysPer(month, year)) + day;
 }
 
 /// A struct that holds the components specific to Gregorian calendars: [year], [month], and [day].
@@ -99,7 +139,7 @@ class GregorianCalendarComponents {
     factory GregorianCalendarComponents.fromTimestamp(Timestamp ts) {
         /// This is the timezoned microsecond timestamp of [ts]. For instance, if a region has offset +01:00, the utc microsecondsSinceEpoch is `500`,
         /// then this variable is `500 + 1 * microsecondsPerHour`.
-        final microsecondsSinceEpoch = ts.instant.microSecondsSinceEpoch() + ts.timezone.offset(ts.instant.microSecondsSinceEpoch()).asMicroseconds();
+        final microsecondsSinceEpoch = ts.instant.microsecondsSinceEpoch() + ts.timezone.offset(ts.instant.microsecondsSinceEpoch()).asMicroseconds();
         final microsecondsSinceInternalEpoch = microsecondsSinceEpoch + -(ts.timezone.possibleOffsets[ts.timezone.history.firstWhere((his) => his.until >= microsecondsSinceEpoch).index] * Minute.microsecondsPer).truncate();
         final daysSinceEpoch = microsecondsSinceInternalEpoch ~/ Day.microsecondsPer;
 

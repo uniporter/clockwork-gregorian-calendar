@@ -71,11 +71,26 @@ class GregorianCalendar extends Calendar {
         return artifact;
     }
 
-    @override GregorianYear weekYear(Timestamp ts) => ts.weekyear;
+    /// Returns the week year of [ts] under [locale].
+    ///
+    /// If [locale] is not specified, then [currLocale] is used.
+    ///
+    /// The week year has a rather complicated definition. The field [locale] carries [WeekData.minDaysInWeek] and [WeekData.firstDayOfWeek]. The first week of
+    /// a year begins from either the first [WeekData.firstDayOfWeek] (if the number of days before the day in question in the year is smaller than [WeekData.minDaysInWeek],
+    /// in which case those days belong to the last week of the previous year), or the last [WeekData.firstDayOfWeek] of the preceding year (if the number of days
+    /// before the day in question is at least [WeekData.minDaysInWeek], in which case the days from the last [WeekData.firstDayOfWeek] in the previous year is actually in the first
+    /// week of this year).
+    ///
+    /// This function returns the year of the week that [ts] is in.
+    @override GregorianYear weekYear(Timestamp ts, [Locale? locale]) => ts.weekYear(locale);
+    @override GregorianWeekOfYear weekOfYear(Timestamp ts, [Locale? locale]) => ts.weekOfYear(locale);
+    @override GregorianWeekOfMonth weekOfMonth(Timestamp ts, [Locale? locale]) => ts.weekOfMonth(locale);
     @override GregorianYearOfEra yearOfEra(Timestamp ts) => ts.yearOfEra;
     @override GregorianYear year(Timestamp ts) => ts.year;
+    @override GregorianYear relativeGregorianYear(Timestamp ts) => ts.year;
+    @override GregorianYear cyclicYear(Timestamp ts) => super.cyclicYear(ts) as GregorianYear;
 
-    @override GregorianWeekday weekday(Timestamp ts) => ts.weekday;
+    @override GregorianWeekday weekday(Timestamp ts, [Locale? locale]) => ts.weekday(locale);
     @override GregorianDay day(Timestamp ts) => ts.day;
     @override GregorianMonth month(Timestamp ts) => ts.month;
 

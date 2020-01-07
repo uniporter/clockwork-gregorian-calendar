@@ -13,3 +13,10 @@ class GregorianDay extends Day {
     @override GregorianDay operator +(dynamic other) => (super + other) as GregorianDay;
     @override GregorianDay operator -(dynamic other) => (super - other) as GregorianDay;
 }
+
+class GregorianDayOfYear extends Day {
+    GregorianDayOfYear(int value, GregorianYear year): super(value, Range(1, GregorianYear.isLeapYear(year) ? 366 : 365));
+
+    @override GregorianDayOfYear operator +(dynamic other) => (super + other) as GregorianDayOfYear;
+    @override GregorianDayOfYear operator -(dynamic other) => (super - other) as GregorianDayOfYear;
+}
